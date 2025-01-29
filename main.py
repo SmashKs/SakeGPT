@@ -1,6 +1,8 @@
+from OpenAIClient import OpenAIClient
+
 
 def main():
-    print('hello world')
+    client = OpenAIClient('OPENAI_API_TOKEN')
 
 
 if __name__ == '__main__':
