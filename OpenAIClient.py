@@ -1,8 +1,10 @@
 from openai import OpenAI
+from OnlineAIClient import OnlineAIClient
 
 
-class OpenAIClient:
+class OpenAIClient(OnlineAIClient):
     def __init__(self, api_token, model='gpt-3.5-turbo'):
+        super().__init__()
         self._api_token = api_token
         self._model = model
         if self._api_token is None:
@@ -18,11 +20,40 @@ class OpenAIClient:
             'content': prompt
         })
 
-    def send_message(self, message):
+    def send_image(self, image, prompt):
+        self.conversation_history.append({
+            'role': 'user',
+            'content': [
+                {'type': 'text', 'text': prompt},
+                {
+                    'type': 'image_url',
+                    'image_url': {
+                        'url': f"data:image/jpeg;base64,{image}"
+                    }
+                }
+            ],
+            'detail': 'auto'
+        })
+
+        response = self.client.chat.completions.create(
+            model='gpt-4o-mini',
+            messages=self.conversation_history,
+            max_tokens=300
+        )
+
+        assistant_response = response.choices[0].message.content
+        self.conversation_history.append({
+            'role': 'assistant',
+            'content': assistant_response
+        })
+
+        return assistant_response
+
+    def send_message(self, prompt):
         try:
             self.conversation_history.append({
                 'role': 'user',
-                'content': message
+                'content': prompt
             })
 
             response = self.client.chat.completions.create(
@@ -42,15 +73,3 @@ class OpenAIClient:
 
     def clear_history(self):
         self.conversation_history.clear()
-
-    @property
-    def model(self):
-        return self._model
-
-    @model.setter
-    def model(self, value):
-        self._model = value
-
-    @property
-    def api_token(self):
-        return self._api_token
